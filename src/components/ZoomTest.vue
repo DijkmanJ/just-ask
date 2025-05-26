@@ -122,7 +122,6 @@ async function joinMeeting() {
       signature,
       meetingNumber: meetingNumber.value,
       userName: userName.value,
-      apiKey: import.meta.env.VITE_ZOOM_SDK_KEY,
       passWord: '', // Add if meeting has password
       success: () => {
         console.log('Successfully joined meeting')
