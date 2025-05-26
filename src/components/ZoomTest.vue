@@ -52,8 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onErrorCaptured } from 'vue'
-import { ZoomMtg } from '@zoomus/websdk'
+import { ref, onMounted } from 'vue'
 
 const sdkStatus = ref('Not initialized')
 const isInitializing = ref(false)
@@ -65,12 +64,6 @@ const userName = ref('')
 
 onMounted(() => {
   console.log('ZoomTest component mounted')
-  console.log('Current route:', window.location.pathname)
-  console.log('Component state:', {
-    sdkStatus: sdkStatus.value,
-    isInitialized: isInitialized.value,
-    error: error.value
-  })
 })
 
 function initZoom() {
@@ -79,25 +72,37 @@ function initZoom() {
     error.value = ''
     console.log('Initializing Zoom SDK...')
 
-    // Initialize Zoom SDK
-    ZoomMtg.setZoomJSLib('https://source.zoom.us/2.18.0/lib', '/av')
-    ZoomMtg.preLoadWasm()
-    ZoomMtg.prepareWebSDK()
-    
-    // Initialize the SDK
-    ZoomMtg.init({
-      leaveUrl: window.location.origin,
-      success: function() {
-        console.log('SDK initialized successfully')
-        sdkStatus.value = 'SDK initialized successfully'
-        isInitialized.value = true
-      },
-      error: function(e: Error | string) {
-        console.error('SDK initialization failed:', e)
-        error.value = 'Failed to initialize SDK'
-        sdkStatus.value = 'Initialization failed'
-      }
-    })
+    // Load Zoom SDK script
+    const script = document.createElement('script')
+    script.src = 'https://source.zoom.us/2.18.0/lib/vendor.min.js'
+    script.onload = () => {
+      console.log('Zoom SDK script loaded')
+      // @ts-ignore
+      window.ZoomMtg.setZoomJSLib('https://source.zoom.us/2.18.0/lib', '/av')
+      // @ts-ignore
+      window.ZoomMtg.preLoadWasm()
+      // @ts-ignore
+      window.ZoomMtg.prepareWebSDK()
+      // @ts-ignore
+      window.ZoomMtg.init({
+        leaveUrl: window.location.origin,
+        success: () => {
+          console.log('SDK initialized successfully')
+          sdkStatus.value = 'SDK initialized successfully'
+          isInitialized.value = true
+        },
+        error: (e: unknown) => {
+          console.error('SDK initialization failed:', e)
+          error.value = 'Failed to initialize SDK'
+          sdkStatus.value = 'Initialization failed'
+        }
+      })
+    }
+    script.onerror = () => {
+      error.value = 'Failed to load Zoom SDK'
+      sdkStatus.value = 'Failed to load SDK'
+    }
+    document.head.appendChild(script)
   } catch (e) {
     console.error('Zoom SDK initialization failed:', e)
     error.value = e instanceof Error ? e.message : 'Failed to initialize Zoom SDK'
@@ -117,7 +122,6 @@ function joinMeeting() {
     isJoining.value = true
     error.value = ''
 
-    // Call backend to generate signature
     fetch('/api/zoom/signature', {
       method: 'POST',
       headers: {
@@ -125,7 +129,7 @@ function joinMeeting() {
       },
       body: JSON.stringify({
         meetingNumber: meetingNumber.value,
-        role: 0 // 0 for attendee, 1 for host
+        role: 0
       })
     })
     .then(response => {
@@ -134,27 +138,27 @@ function joinMeeting() {
       }
       return response.json()
     })
-    .then(function(data) {
-      const { signature } = data
-      ZoomMtg.join({
-        signature,
+    .then(data => {
+      // @ts-ignore
+      window.ZoomMtg.join({
+        signature: data.signature,
         meetingNumber: meetingNumber.value,
         userName: userName.value,
-        passWord: '', // Add if meeting has password
-        success: function() {
+        passWord: '',
+        success: () => {
           console.log('Successfully joined meeting')
         },
-        error: function(e: Error | string) {
+        error: (e: unknown) => {
           console.error('Failed to join meeting:', e)
           error.value = 'Failed to join meeting'
         }
       })
     })
-    .catch(function(e: Error | string) {
+    .catch(e => {
       console.error('Error joining meeting:', e)
       error.value = e instanceof Error ? e.message : 'Failed to join meeting'
     })
-    .finally(function() {
+    .finally(() => {
       isJoining.value = false
     })
   } catch (e) {
@@ -163,13 +167,4 @@ function joinMeeting() {
     isJoining.value = false
   }
 }
-
-// Add error boundary
-onErrorCaptured((err, instance, info) => {
-  console.error('ZoomTest Error:', err)
-  console.error('Component:', instance)
-  console.error('Info:', info)
-  error.value = err instanceof Error ? err.message : 'An error occurred'
-  return false // prevent error from propagating
-})
 </script> 
