@@ -73,16 +73,7 @@ onMounted(() => {
   })
 })
 
-// Add error boundary
-onErrorCaptured((err, instance, info) => {
-  console.error('ZoomTest Error:', err)
-  console.error('Component:', instance)
-  console.error('Info:', info)
-  error.value = err instanceof Error ? err.message : 'An error occurred'
-  return false // prevent error from propagating
-})
-
-async function initZoom() {
+function initZoom() {
   try {
     isInitializing.value = true
     error.value = ''
@@ -90,8 +81,8 @@ async function initZoom() {
 
     // Initialize Zoom SDK
     ZoomMtg.setZoomJSLib('https://source.zoom.us/2.18.0/lib', '/av')
-    await ZoomMtg.preLoadWasm()
-    await ZoomMtg.prepareWebSDK()
+    ZoomMtg.preLoadWasm()
+    ZoomMtg.prepareWebSDK()
     
     // Initialize the SDK
     ZoomMtg.init({
@@ -116,7 +107,7 @@ async function initZoom() {
   }
 }
 
-async function joinMeeting() {
+function joinMeeting() {
   if (!meetingNumber.value || !userName.value) {
     error.value = 'Please enter both meeting number and your name'
     return
@@ -127,7 +118,7 @@ async function joinMeeting() {
     error.value = ''
 
     // Call backend to generate signature
-    const response = await fetch('/api/zoom/signature', {
+    fetch('/api/zoom/signature', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -137,31 +128,47 @@ async function joinMeeting() {
         role: 0 // 0 for attendee, 1 for host
       })
     })
-
-    if (!response.ok) {
-      throw new Error('Failed to generate signature')
-    }
-
-    const { signature } = await response.json()
-
-    await ZoomMtg.join({
-      signature,
-      meetingNumber: meetingNumber.value,
-      userName: userName.value,
-      passWord: '', // Add if meeting has password
-      success: () => {
-        console.log('Successfully joined meeting')
-      },
-      error: (e: any) => {
-        console.error('Failed to join meeting:', e)
-        error.value = 'Failed to join meeting'
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to generate signature')
       }
+      return response.json()
+    })
+    .then(({ signature }) => {
+      ZoomMtg.join({
+        signature,
+        meetingNumber: meetingNumber.value,
+        userName: userName.value,
+        passWord: '', // Add if meeting has password
+        success: () => {
+          console.log('Successfully joined meeting')
+        },
+        error: (e: any) => {
+          console.error('Failed to join meeting:', e)
+          error.value = 'Failed to join meeting'
+        }
+      })
+    })
+    .catch(e => {
+      console.error('Error joining meeting:', e)
+      error.value = e instanceof Error ? e.message : 'Failed to join meeting'
+    })
+    .finally(() => {
+      isJoining.value = false
     })
   } catch (e) {
     console.error('Error joining meeting:', e)
     error.value = e instanceof Error ? e.message : 'Failed to join meeting'
-  } finally {
     isJoining.value = false
   }
 }
+
+// Add error boundary
+onErrorCaptured((err, instance, info) => {
+  console.error('ZoomTest Error:', err)
+  console.error('Component:', instance)
+  console.error('Info:', info)
+  error.value = err instanceof Error ? err.message : 'An error occurred'
+  return false // prevent error from propagating
+})
 </script> 
