@@ -92,7 +92,7 @@ function initZoom() {
         sdkStatus.value = 'SDK initialized successfully'
         isInitialized.value = true
       },
-      error: function(e) {
+      error: function(e: Error | string) {
         console.error('SDK initialization failed:', e)
         error.value = 'Failed to initialize SDK'
         sdkStatus.value = 'Initialization failed'
@@ -144,13 +144,13 @@ function joinMeeting() {
         success: function() {
           console.log('Successfully joined meeting')
         },
-        error: function(e) {
+        error: function(e: Error | string) {
           console.error('Failed to join meeting:', e)
           error.value = 'Failed to join meeting'
         }
       })
     })
-    .catch(function(e) {
+    .catch(function(e: Error | string) {
       console.error('Error joining meeting:', e)
       error.value = e instanceof Error ? e.message : 'Failed to join meeting'
     })
