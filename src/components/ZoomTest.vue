@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onErrorCaptured } from 'vue'
 import { ZoomMtg } from '@zoomus/websdk'
 
 const sdkStatus = ref('Not initialized')
@@ -65,6 +65,21 @@ const userName = ref('')
 
 onMounted(() => {
   console.log('ZoomTest component mounted')
+  console.log('Current route:', window.location.pathname)
+  console.log('Component state:', {
+    sdkStatus: sdkStatus.value,
+    isInitialized: isInitialized.value,
+    error: error.value
+  })
+})
+
+// Add error boundary
+onErrorCaptured((err, instance, info) => {
+  console.error('ZoomTest Error:', err)
+  console.error('Component:', instance)
+  console.error('Info:', info)
+  error.value = err instanceof Error ? err.message : 'An error occurred'
+  return false // prevent error from propagating
 })
 
 async function initZoom() {

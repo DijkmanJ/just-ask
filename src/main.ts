@@ -6,7 +6,17 @@ import './index.css'
 console.log('Initializing app...')
 
 const app = createApp(App)
-app.use(router)
-app.mount('#app')
+console.log('Vue app created')
 
-console.log('App mounted') 
+app.use(router)
+console.log('Router installed')
+
+app.mount('#app')
+console.log('App mounted to #app element')
+
+// Add error handler
+app.config.errorHandler = (err, instance, info) => {
+  console.error('Vue Error:', err)
+  console.error('Component:', instance)
+  console.error('Info:', info)
+} 
