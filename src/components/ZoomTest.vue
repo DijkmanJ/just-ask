@@ -92,10 +92,20 @@ async function initZoom() {
     ZoomMtg.setZoomJSLib('https://source.zoom.us/2.18.0/lib', '/av')
     await ZoomMtg.preLoadWasm()
     await ZoomMtg.prepareWebSDK()
-
-    sdkStatus.value = 'SDK initialized successfully'
-    isInitialized.value = true
-    console.log('Zoom SDK initialized successfully')
+    
+    // Initialize the SDK
+    await ZoomMtg.init({
+      leaveUrl: window.location.origin,
+      success: () => {
+        console.log('SDK initialized successfully')
+        sdkStatus.value = 'SDK initialized successfully'
+        isInitialized.value = true
+      },
+      error: (e: any) => {
+        console.error('SDK initialization failed:', e)
+        throw new Error('Failed to initialize SDK')
+      }
+    })
   } catch (e) {
     console.error('Zoom SDK initialization failed:', e)
     error.value = e instanceof Error ? e.message : 'Failed to initialize Zoom SDK'
