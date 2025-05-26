@@ -87,12 +87,12 @@ function initZoom() {
     // Initialize the SDK
     ZoomMtg.init({
       leaveUrl: window.location.origin,
-      success: () => {
+      success: function() {
         console.log('SDK initialized successfully')
         sdkStatus.value = 'SDK initialized successfully'
         isInitialized.value = true
       },
-      error: (e: any) => {
+      error: function(e) {
         console.error('SDK initialization failed:', e)
         error.value = 'Failed to initialize SDK'
         sdkStatus.value = 'Initialization failed'
@@ -134,26 +134,27 @@ function joinMeeting() {
       }
       return response.json()
     })
-    .then(({ signature }) => {
+    .then(function(data) {
+      const { signature } = data
       ZoomMtg.join({
         signature,
         meetingNumber: meetingNumber.value,
         userName: userName.value,
         passWord: '', // Add if meeting has password
-        success: () => {
+        success: function() {
           console.log('Successfully joined meeting')
         },
-        error: (e: any) => {
+        error: function(e) {
           console.error('Failed to join meeting:', e)
           error.value = 'Failed to join meeting'
         }
       })
     })
-    .catch(e => {
+    .catch(function(e) {
       console.error('Error joining meeting:', e)
       error.value = e instanceof Error ? e.message : 'Failed to join meeting'
     })
-    .finally(() => {
+    .finally(function() {
       isJoining.value = false
     })
   } catch (e) {
