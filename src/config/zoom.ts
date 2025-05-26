@@ -14,7 +14,7 @@ export const ZOOM_CONFIG = {
 }
 
 // Helper function to verify event notifications
-export function verifyZoomEvent(signature: string, timestamp: string, payload: string): boolean {
+export function verifyZoomEvent(_signature: string, _timestamp: string, _payload: string): boolean {
   // TODO: Implement proper signature verification
   // This should be done on the backend for security
   return true

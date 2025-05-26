@@ -1,4 +1,4 @@
-import { ZOOM_CONFIG, verifyZoomEvent, generateVerificationResponse } from '../config/zoom'
+import { verifyZoomEvent, generateVerificationResponse } from '../config/zoom'
 
 interface ZoomEvent {
   event: string
