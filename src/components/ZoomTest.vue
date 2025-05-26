@@ -24,17 +24,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ZoomMtg } from '@zoomus/websdk'
 
 const sdkStatus = ref('Not initialized')
 const isInitializing = ref(false)
 const error = ref('')
 
+onMounted(() => {
+  console.log('ZoomTest component mounted')
+})
+
 async function initZoom() {
   try {
     isInitializing.value = true
     error.value = ''
+    console.log('Initializing Zoom SDK...')
 
     // Initialize Zoom SDK
     ZoomMtg.setZoomJSLib('https://source.zoom.us/2.18.0/lib', '/av')
@@ -42,7 +47,9 @@ async function initZoom() {
     await ZoomMtg.prepareWebSDK()
 
     sdkStatus.value = 'SDK initialized successfully'
+    console.log('Zoom SDK initialized successfully')
   } catch (e) {
+    console.error('Zoom SDK initialization failed:', e)
     error.value = e instanceof Error ? e.message : 'Failed to initialize Zoom SDK'
     sdkStatus.value = 'Initialization failed'
   } finally {
